@@ -1,0 +1,15 @@
+- hosts: all
+  gather_facts: no
+  tasks:
+          - name: Installing Httpd server
+            package:
+                    name: httpd
+                    state: present
+          - copy:
+               src: newyear.html
+               dest: /var/www/html
+          - name: Starting web server services
+            command: /usr/sbin/httpd
+            register: y
+          - debug:
+                  var: y.stderr

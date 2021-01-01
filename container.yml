@@ -1,0 +1,42 @@
+- hosts: localhost
+  vars_prompt:
+          - name: container_name
+            prompt: "Please Enter any name for Container"
+            private: no
+  tasks:
+  - name: Installing docker SDK for Ansible
+    block:
+            - command: pip3 install docker-py
+    rescue:
+      - pip:
+              name: docker-py
+
+
+  - name: Pulling the docker image
+    community.general.docker_image:
+            name: yogi456/testforssh
+            pull: yes
+            source: local
+  - name: Launching A Docker Container
+    community.general.docker_container:
+            name: "{{ container_name }}"
+            image: yogi456/testforssh
+            state: started
+            interactive: yes
+            detach: yes
+            tty: yes
+            ports: 
+                   - "8384:80"
+    register: x
+
+  - debug:
+           msg: x.container.NetworkSettings.IPAddress
+
+  - name: Updating the Inventory file dynamically
+    blockinfile:
+              dest: "/etc/myhosts.txt"
+              block: |
+                      [webserver]
+                      {{ x['container']['NetworkSettings']['IPAddress'] }} ansible_user=root ansible_ssh_pass=redhat ansible_connection=ssh
+
+
